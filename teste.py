@@ -1,43 +1,25 @@
-def Print(list):
+import pyjs
+import unittest
 
-    dado_bruto = list
+# converter a função Python para JavaScript usando Pyjs
+js_code = pyjs.compile_python_to_js("""
+def soma(a, b):
+    return a + b
+""")
 
-    print("Dado bruto {}".format(dado_bruto))
+# definir a função JavaScript equivalente
+exec(js_code)
+js_soma = soma
 
+class TestSoma(unittest.TestCase):
+    def test_soma_1(self):
+        self.assertEqual(soma(2, 3), js_soma(2, 3))
 
-    novo_print = []
-    adicionar = lambda dado : novo_print.append(dado)
+    def test_soma_2(self):
+        self.assertEqual(soma(0, 0), js_soma(0, 0))
 
+    def test_soma_3(self):
+        self.assertEqual(soma(-1, 1), js_soma(-1, 1))
 
-    conversor_print = lambda x,add : x[0]=="print" and add("console.log") or x[1] == "(" and add('(') or x[2] =='"' and add('"') or conteudo_string(x) or x[-1]==")" and add(')') or x[-2]=='"'  
-
-
-    def conteudo_string (list):
-
-        for x in list[3:]:
-            
-
-            if x == ')':
-
-                break
-
-            adicionar(x)      
-
-
-    resultado = conversor_print(dado_bruto,adicionar)
-
-    if(resultado == False):
-
-        print("Sintaxe invalida")
-    else:
-
-        print("Lista nova print: {}".format(novo_print))
-        return novo_print
-
-
-    saida = open("saida.txt", "w")
-
-    saida.write('dados de saida')
-
-    saida.close()
-
+if __name__ == '__main__':
+    unittest.main()
