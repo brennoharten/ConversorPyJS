@@ -1,61 +1,46 @@
-# Step 3: Semantic Analysis
-# ...
-# ...
-
+from parser2 import NodeType
 class SemanticAnalyzer:
-    def __init__(self, ast):
-        self.ast = ast
-        self.variables = {}
-
+    def __init__(self, root):
+        self.root = root
+    
     def analyze(self):
-        self.traverse(self.ast)
+        symbol_table = {}
 
-    def traverse(self, node):
-        if isinstance(node, AssignNode):
-            var_name = node.left.value
-            if var_name in self.variables:
-                raise Exception(f"Variable '{var_name}' already defined")
-            self.variables[var_name] = self.get_type(node.right)
+        def traverse(node):
+            if node is None:
+                return
 
-        elif isinstance(node, PrintNode):
-            self.get_type(node.expr)
+            if node.type == NodeType.IDENTIFIER:
+                if node.value not in symbol_table:
+                    raise NameError(f"Name '{node.value}' is not defined")
+            elif node.type == NodeType.OPERATOR:
+                if node.left.type != NodeType.IDENTIFIER:
+                    raise SyntaxError("Can only assign to variable")
+                symbol_table[node.left.value] = True
+            elif node.type == NodeType.FUNCTION_CALL:
+                if node.func.type == NodeType.IDENTIFIER:
+                    if node.func.value == "print":
+                        if len(node.args) != 1:
+                            raise TypeError("print() takes exactly 1 argument")
+                    else:
+                        raise NameError(f"Name '{node.func.value}' is not defined")
+            elif node.type == NodeType.BINARY_OPERATION:
+                traverse(node.left)
+                traverse(node.right)
+            elif node.type == NodeType.UNARY_OPERATION:
+                traverse(node.expr)
+            elif node.type == NodeType.FUNCTION_CALL:
+                symbol_table[node.name] = True
+                for arg in node.args:
+                    symbol_table[arg] = True
+                traverse(node.body)
+            elif node.type == NodeType.IF:
+                traverse(node.cond)
+                traverse(node.if_body)
+                if node.else_body:
+                    traverse(node.else_body)
+            elif node.type == NodeType.WHILE or node.type == NodeType.FOR:
+                traverse(node.cond)
+                traverse(node.body)
 
-        elif isinstance(node, IfNode):
-            self.get_type(node.condition)
-            for child_node in node.true_body:
-                self.traverse(child_node)
-            for child_node in node.false_body:
-                self.traverse(child_node)
-
-        elif isinstance(node, WhileNode):
-            self.get_type(node.condition)
-            for child_node in node.body:
-                self.traverse(child_node)
-
-        elif isinstance(node, BinaryOpNode):
-            left_type = self.get_type(node.left)
-            right_type = self.get_type(node.right)
-            op = node.op.type
-            if op in ["PLUS", "MINUS", "MULTIPLY", "DIVIDE"]:
-                if left_type != "int" or right_type != "int":
-                    raise Exception("Operands must be of type 'int'")
-
-        elif isinstance(node, VarAccessNode):
-            var_name = node.value
-            if var_name not in self.variables:
-                raise Exception(f"Variable '{var_name}' is not defined")
-
-    def get_type(self, node):
-        if isinstance(node, IntNode):
-            return "int"
-        elif isinstance(node, BoolNode):
-            return "bool"
-        elif isinstance(node, VarAccessNode):
-            var_name = node.value
-            if var_name not in self.variables:
-                raise Exception(f"Variable '{var_name}' is not defined")
-            return self.variables[var_name]
-        elif isinstance(node, BinaryOpNode):
-            return "int"
-        else:
-            raise Exception("Unsupported type")
+        traverse(self.root)
