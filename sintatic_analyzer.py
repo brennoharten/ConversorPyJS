@@ -1,7 +1,9 @@
 from tokenizer import TokenType
+from codeGenerator import CodeGenerator
 
 class Parser:
     def __init__(self, tokens):
+        self.code_generator = CodeGenerator()
         self.tokens = tokens
         self.current_token_index = 0
         self.current_token = None
@@ -65,13 +67,13 @@ class Parser:
         self.consume(TokenType.KEYWORD)
         expression = self.parse_expression()
         # Generate JavaScript code for print statement using 'expression'
-        return generate_js_code_for_print(expression)
+        return self.code_generator.generate_js_code_for_print(expression)
 
     def parse_return_statement(self):
         self.consume(TokenType.KEYWORD)
         expression = self.parse_expression()
         # Generate JavaScript code for return statement using 'expression'
-        return generate_js_code_for_return(expression)
+        return self.code_generator.generate_js_code_for_return(expression)
 
 
     def parse_assignment_statement(self):
@@ -80,14 +82,14 @@ class Parser:
         self.consume(TokenType.ASSIGNMENT)
         expression = self.parse_expression()
         # Gerar código de atribuição em JavaScript usando 'identifier' e 'expression'
-        return generate_js_code_for_assignment(identifier, expression)
+        return self.code_generator.generate_js_code_for_assignment(identifier, expression)
 
     def parse_if_statement(self):
         self.consume(TokenType.KEYWORD)
         condition = self.parse_expression()
         self.consume(TokenType.COLON)
         # Generate JavaScript code for 'if' structure using 'condition'
-        js_code = generate_js_code_for_if_structure(condition)
+        js_code = self.code_generator.generate_js_code_for_if_structure(condition)
         self.consume(TokenType.NEWLINE)
 
         # Parse the 'if' block
@@ -99,13 +101,13 @@ class Parser:
             self.consume(TokenType.COLON)
 
             # Generate JavaScript code for 'else' block
-            js_code += generate_js_code_for_else_block()
+            js_code += self.code_generator.generate_js_code_for_else_block()
             self.consume(TokenType.NEWLINE)
 
             self.parse_block()
 
         # Close the 'if' structure
-        js_code += generate_js_code_for_close_if_estructure()
+        js_code += self.code_generator.generate_js_code_for_close_if_estructure()
         return js_code
 
     def parse_while_loop(self):
@@ -134,7 +136,7 @@ class Parser:
             right = self.parse_equality_expression()
             # Gerar código JavaScript para a expressão lógica usando 'left', 'operator' e 'right'
             # Atualizar 'left' com o resultado da expressão lógica para análise posterior
-            left = generate_js_code_for_logical_expression(left, operator, right)
+            left = self.code_generator.generate_js_code_for_logical_expression(left, operator, right)
         return left
 
     def parse_equality_expression(self):
@@ -145,7 +147,7 @@ class Parser:
             right = self.parse_relational_expression()
             # Gerar código JavaScript para a expressão de igualdade usando 'left', 'operator' e 'right'
             # Atualizar 'left' com o resultado da expressão de igualdade para análise posterior
-            left = generate_js_code_for_equality_expression(left, operator, right)
+            left = self.code_generator.generate_js_code_for_equality_expression(left, operator, right)
         return left
 
     def parse_relational_expression(self):
@@ -156,7 +158,7 @@ class Parser:
             right = self.parse_additive_expression()
             # Gerar código JavaScript para a expressão relacional usando 'left', 'operator' e 'right'
             # Atualizar 'left' com o resultado da expressão relacional para análise posterior
-            left = generate_js_code_for_relational_expression(left, operator, right)
+            left = self.code_generator.generate_js_code_for_relational_expression(left, operator, right)
         return left
 
     def parse_additive_expression(self):
@@ -167,7 +169,7 @@ class Parser:
             right = self.parse_multiplicative_expression()
             # Gerar código JavaScript para a expressão aditiva usando 'left', 'operator' e 'right'
             # Atualizar 'left' com o resultado da expressão aditiva para análise posterior
-            left = generate_js_code_for_additive_expression(left, operator, right)
+            left = self.code_generator.generate_js_code_for_additive_expression(left, operator, right)
         return left
 
     def parse_multiplicative_expression(self):
@@ -178,7 +180,7 @@ class Parser:
             right = self.parse_primary_expression()
             # Gerar código JavaScript para a expressão multiplicativa usando 'left', 'operator' e 'right'
             # Atualizar 'left' com o resultado da expressão multiplicativa para análise posterior
-            left = generate_js_code_for_multiplicative_expression(left, operator, right)
+            left = self.code_generator.generate_js_code_for_multiplicative_expression(left, operator, right)
         return left
 
     def parse_primary_expression(self):
@@ -186,27 +188,27 @@ class Parser:
             value = self.current_token.value
             self.consume(TokenType.NUMBER)
             # Gerar código JavaScript para um número
-            return generate_js_code_for_number(value)
+            return self.code_generator.generate_js_code_for_number(value)
         elif self.current_token.type == TokenType.STRING:
             value = self.current_token.value
             self.consume(TokenType.STRING)
             # Gerar código JavaScript para uma string
-            return generate_js_code_for_string(value)
+            return self.code_generator.generate_js_code_for_string(value)
         elif self.current_token.type == TokenType.BOOLEAN:
             value = self.current_token.value
             self.consume(TokenType.BOOLEAN)
             # Gerar código JavaScript para um booleano
-            return generate_js_code_for_boolean(value)
+            return self.code_generator.generate_js_code_for_boolean(value)
         elif self.current_token.type == TokenType.IDENTIFIER:
             identifier = self.current_token.value
             self.consume(TokenType.IDENTIFIER)
             # Gerar código JavaScript para um identificador
-            return generate_js_code_for_identifier(identifier)
+            return self.code_generator.generate_js_code_for_identifier(identifier)
         elif self.current_token.type == TokenType.LPAREN:
             self.consume(TokenType.LPAREN)
             expression = self.parse_expression()
             self.consume(TokenType.RPAREN)
             # Gerar código JavaScript para uma expressão entre parênteses
-            return generate_js_code_for_parenthesized_expression(expression)
+            return self.code_generator.generate_js_code_for_parenthesized_expression(expression)
         else:
             raise SyntaxError("Invalid expression")

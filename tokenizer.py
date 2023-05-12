@@ -192,7 +192,7 @@ class Tokenizer:
                 self.position += 1
 
             elif current_char == ' ':
-                self.tokens.append(Token(TokenType.WHITESPACE, ' '))
+                ##self.tokens.append(Token(TokenType.WHITESPACE, ' '))
                 self.position += 1
 
             elif current_char == '\n':
