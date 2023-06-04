@@ -21,19 +21,7 @@ class CodeGenerator:
     def generate_js_code_for_close_if_structure(self):
         return '}'
 
-    def generate_js_code_for_logical_expression(self, left, operator, right):
-        return f'{left} {operator} {right}'
-
-    def generate_js_code_for_equality_expression(self, left, operator, right):
-        return f'{left} {operator} {right}'
-
-    def generate_js_code_for_relational_expression(self, left, operator, right):
-        return f'{left} {operator} {right}'
-
-    def generate_js_code_for_additive_expression(self, left, operator, right):
-        return f'{left} {operator} {right}'
-
-    def generate_js_code_for_multiplicative_expression(self, left, operator, right):
+    def generate_js_code_for_expression(self, left, operator, right):
         return f'{left} {operator} {right}'
 
     def generate_js_code_for_number(self, value):
@@ -50,3 +38,11 @@ class CodeGenerator:
 
     def generate_js_code_for_parenthesized_expression(self, expression):
         return f'({expression})'
+    
+    def generate_js_code_for_function_declaration(self, function_name, parameters, block_code):
+        parameters_str = ', '.join(parameters)
+        function_declaration = f"function {function_name}({parameters_str}) {{\n"
+        function_declaration += block_code
+        function_declaration += "}\n\n"
+        return function_declaration
+
