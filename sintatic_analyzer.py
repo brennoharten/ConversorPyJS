@@ -34,8 +34,10 @@ class Parser:
                     self.js_code += self.parse_return_statement()
                 else:
                     self.error(f"Invalid keyword: {self.current_token.value}")
-            elif self.current_token.type == TokenType.FUNCTION:
+            elif self.current_token.value == 'def':
                 self.js_code += self.parse_function_definition()
+            elif self.current_token.type == TokenType.FUNCTION:
+                self.js_code += self.parse_function_call()
             else:
                 self.error(f"Unexpected token: {self.current_token.type}")
         return self.js_code
@@ -73,6 +75,27 @@ class Parser:
         expression = self.parse_expression()
         # Generate JavaScript code for print statement using 'expression'
         return self.code_generator.generate_js_code_for_print(expression)
+    
+    def parse_function_call(self):
+        function_name = self.current_token.value
+        self.consume(TokenType.FUNCTION)
+        self.consume(TokenType.LPAREN)
+
+        # Parse os argumentos da função
+        arguments = []
+        if self.current_token.type != TokenType.RPAREN:
+            argument = self.parse_expression()
+            arguments.append(argument)
+            while self.current_token.type == TokenType.COMMA:
+                self.consume(TokenType.COMMA)
+                argument = self.parse_expression()
+                arguments.append(argument)
+
+        self.consume(TokenType.RPAREN)
+
+        # Gerar código JavaScript para a chamada da função
+        return self.code_generator.generate_js_code_for_function_call(function_name, arguments)
+
 
     def parse_return_statement(self):
         self.consume(TokenType.KEYWORD)
@@ -137,7 +160,7 @@ class Parser:
 
     def parse_logical_expression(self):
         left = self.parse_equality_expression()
-        if self.current_token and self.current_token.type != TokenType.LOGICAL_OPERATOR or self.next == True:
+        if self.current_token and self.current_token.type != TokenType.LOGICAL_OPERATOR or self.next == True or self.current_token == None:
             return self.code_generator.generate_js_code_for_number(left)
         else:
             while self.current_token and self.current_token.type == TokenType.LOGICAL_OPERATOR:
@@ -150,7 +173,7 @@ class Parser:
 
     def parse_equality_expression(self):
         left = self.parse_relational_expression()
-        if self.current_token and self.current_token.type != TokenType.EQUALITY or self.next == True:
+        if self.current_token and self.current_token.type != TokenType.EQUALITY or self.next == True or self.current_token == None:
             return self.code_generator.generate_js_code_for_number(left)
         else:
             while self.current_token and self.current_token.type == TokenType.EQUALITY:
@@ -163,7 +186,7 @@ class Parser:
 
     def parse_relational_expression(self):
         left = self.parse_additive_expression()
-        if self.current_token and self.current_token.type != TokenType.RELATIONAL or self.next == True:
+        if self.current_token and self.current_token.type != TokenType.RELATIONAL or self.next == True or self.current_token == None:
             return self.code_generator.generate_js_code_for_number(left)
         else:
             while self.current_token and self.current_token.type == TokenType.RELATIONAL:
@@ -176,7 +199,7 @@ class Parser:
 
     def parse_additive_expression(self):
         left = self.parse_multiplicative_expression()
-        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True:
+        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True or self.current_token == None:
             return self.code_generator.generate_js_code_for_number(left)
         else:
             while self.current_token and self.current_token.type == TokenType.OPERATOR:
@@ -189,7 +212,7 @@ class Parser:
 
     def parse_multiplicative_expression(self):
         left = self.parse_primary_expression()
-        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True:
+        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True or self.current_token == None:
             return self.code_generator.generate_js_code_for_number(left)
         else:
             while self.current_token and self.current_token.type == TokenType.OPERATOR:
@@ -228,6 +251,9 @@ class Parser:
             # Gerar código JavaScript para uma expressão entre parênteses
             self.next = True
             return self.code_generator.generate_js_code_for_parenthesized_expression(expression)
+        elif self.current_token.type == TokenType.FUNCTION:
+            return self.parse_function_call()
+
 
         else:
             raise SyntaxError(f"Invalid expression: {self.current_token.value}")
@@ -235,7 +261,7 @@ class Parser:
     def parse_function_definition(self):
         self.consume(TokenType.FUNCTION)
         function_name = self.current_token.value
-        self.consume(TokenType.IDENTIFIER)
+        self.consume(TokenType.FUNCTION)
         self.consume(TokenType.LPAREN)
 
         # Parse os parâmetros da função

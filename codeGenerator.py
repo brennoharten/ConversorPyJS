@@ -52,3 +52,7 @@ class CodeGenerator:
     def generate_js_code_for_for_loop(self, identifier, iterable):
         return f'for (let {identifier} of {iterable}) {{'
 
+    def generate_js_code_for_function_call(self, function_name, arguments):
+        arguments_code = ', '.join(arguments)
+        return f'{function_name}({arguments_code});'
+

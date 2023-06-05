@@ -74,12 +74,20 @@ class Tokenizer:
                 # Verifica se é uma palavra-chave
                 if value in ('if', 'else', 'while', 'for', 'break', 'continue', 'return', 'print'):
                     self.tokens.append(Token(TokenType.KEYWORD, value))
+                    self.position = next_char_index
                 # Verifica se é uma função
                 elif value in ('abs', 'all', 'any', 'bin', 'bool', 'bytearray', 'bytes', 'callable', 'chr', 'classmethod', 'compile', 'complex', 'delattr', 'dict', 'dir', 'divmod', 'enumerate', 'eval', 'exec', 'filter', 'float', 'format', 'frozenset', 'getattr', 'globals', 'hasattr', 'hash', 'help', 'hex', 'id', 'input', 'int', 'isinstance', 'issubclass', 'iter', 'len', 'list', 'locals', 'map', 'max', 'memoryview', 'min', 'next', 'object', 'oct', 'open', 'ord', 'pow', 'property', 'range', 'repr', 'reversed', 'round', 'set', 'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum', 'super', 'tuple', 'type', 'vars', 'zip','def'):
                     self.tokens.append(Token(TokenType.FUNCTION, value))
+                    self.position = next_char_index
                 else:
-                    self.tokens.append(Token(TokenType.IDENTIFIER, value))
-                self.position = next_char_index
+                    match = re.match(r'([a-zA-Z_][a-zA-Z0-9_]*)\(', self.code[self.position:])
+                    if match:
+                        function_name = match.group(1)
+                        self.tokens.append(Token(TokenType.FUNCTION, function_name))
+                        self.position += len(function_name)
+                    else:
+                        self.tokens.append(Token(TokenType.IDENTIFIER, value))
+                        self.position = next_char_index
 
             # Verifica se é um operador
             elif current_char in '+-*/%':
