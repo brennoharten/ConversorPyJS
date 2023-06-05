@@ -31,6 +31,11 @@ class Token:
         
 
 class Tokenizer:
+    def peek_next_token(self):
+        next_token = self.get_next_token()
+        self.push_token(next_token)
+        return next_token
+
     def __init__(self, code):
         self.code = code
         self.position = 0

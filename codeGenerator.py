@@ -39,13 +39,22 @@ class CodeGenerator:
     def generate_js_code_for_parenthesized_expression(self, expression):
         return f'({expression})'
     
-    def generate_js_code_for_function_declaration(self, function_name, parameters, block_code):
+    def generate_js_code_for_function_declaration(self, function_name, parameters, function_body):
         parameters_str = ', '.join(parameters)
-        function_declaration = f"function {function_name}({parameters_str}) {{\n"
+        function_declaration = f'function {function_name}({parameters_str})' + ' {\n'
+        block_code = self.generate_block_code(function_body)
         function_declaration += block_code
-        function_declaration += "}\n\n"
+        function_declaration += '}'
         return function_declaration
-    
+
+    def generate_block_code(self, statements):
+        self.indent_level += 1
+        block_code = ''
+        for statement in statements:
+            block_code += statement + "\n"
+        self.indent_level -= 1
+        return block_code
+
     def generate_js_code_for_while_loop(self, condition):
         return f'while ({condition}) {{'
 
@@ -54,5 +63,5 @@ class CodeGenerator:
 
     def generate_js_code_for_function_call(self, function_name, arguments):
         arguments_code = ', '.join(arguments)
-        return f'{function_name}({arguments_code});'
+        return f'{function_name}({arguments_code})'
 

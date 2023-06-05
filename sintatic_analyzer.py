@@ -46,6 +46,14 @@ class Parser:
 
     def error(self, message):
         raise SyntaxError(message)
+    
+    def peek_token(self):
+        next_token_index = self.current_token_index
+        if next_token_index < len(self.tokens):
+            return self.tokens[next_token_index]
+        else:
+            return None
+
 
     def advance(self):
         if self.current_token_index < len(self.tokens):
@@ -66,6 +74,44 @@ class Parser:
         self.indent_level += 1  # Aumentar o nível de indentação
         self.parse()
         self.indent_level -= 1  # Reduzir o nível de indentação
+
+    def parse_block2(self):
+        self.consume(TokenType.COLON)  # Consumir o token ':'
+        self.consume(TokenType.NEWLINE)
+        
+        self.indent_level += 1  # Aumentar o nível de indentação
+        
+        block_code = []
+
+        while self.current_token and self.current_token.type != TokenType.NEWLINE or self.peek_token().type != TokenType.NEWLINE:
+            statement = self.parse_statement()
+            if statement != "\n":
+                block_code.append(statement)
+        
+        self.indent_level -= 1  # Reduzir o nível de indentação
+        
+        return block_code
+
+
+
+    def parse_statement(self):
+        if self.current_token.type == TokenType.KEYWORD:
+            if self.current_token.value == 'return':
+                return self.parse_return_statement()
+            if self.current_token.value == "print":
+                return self.parse_print_statement()
+            elif self.current_token.value == "def":
+                return self.parse_function_definition()
+        elif self.current_token.type == TokenType.NEWLINE:
+            self.consume(TokenType.NEWLINE)
+            return "\n"
+        elif self.current_token.type == TokenType.IDENTIFIER and self.peek_token().type == TokenType.LPAREN:
+            return self.parse_function_call()
+        elif self.current_token.type == TokenType.IDENTIFIER:
+            return self.parse_assignment_statement()
+        else:
+            self.error("Invalid statement" + self.current_token.value)
+
 
     def parse_print_statement(self):
         self.consume(TokenType.KEYWORD)
@@ -274,8 +320,13 @@ class Parser:
                 else:
                     self.error("Invalid parameter")
         self.consume(TokenType.RPAREN)
-        self.parse_block()
+
+        # Parse o bloco da função
+        function_body = self.parse_block2()
+
         # Gerar código JavaScript para a definição da função
-        return self.code_generator.generate_js_code_for_function_declaration(function_name, parameters, self.js_code)
-    
+        return self.code_generator.generate_js_code_for_function_declaration(function_name, parameters, function_body)
+        
+
+        
 

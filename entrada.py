@@ -1,4 +1,10 @@
-x = 2 
-z = 3
-if x == z:
-    print(x)
+def somar(a, b):
+    return a + b
+
+def main():
+    num1 = 2
+    num2 = 3
+    resultado = somar(num1, num2)
+    print(resultado)
+
+main()
