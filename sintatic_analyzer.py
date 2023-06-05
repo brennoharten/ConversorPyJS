@@ -13,7 +13,7 @@ class Parser:
 
     def parse(self):
         self.advance()
-        while self.current_token:
+        while self.current_token and self.current_token != None :
             if self.current_token.type == TokenType.NEWLINE:
                 self.consume(TokenType.NEWLINE)
                 self.js_code += "\n"
@@ -23,7 +23,7 @@ class Parser:
                 self.js_code += self.parse_assignment_statement()
             elif self.current_token.type == TokenType.KEYWORD:
                 if self.current_token.value == 'if':
-                    self.js_code += self.parse_if_statement()
+                    self.parse_if_statement()
                 elif self.current_token.value == 'while':
                     self.js_code += self.parse_while_loop()
                 elif self.current_token.value == 'for':
@@ -64,10 +64,7 @@ class Parser:
         self.consume(TokenType.COLON)  # Consumir o token ':'
         
         self.indent_level += 1  # Aumentar o nível de indentação
-        
-        while self.current_token and self.current_token.type != TokenType.NEWLINE:
-            self.parse()
-        
+        self.parse()
         self.indent_level -= 1  # Reduzir o nível de indentação
 
     def parse_print_statement(self):
@@ -115,10 +112,10 @@ class Parser:
     def parse_if_statement(self):
         self.consume(TokenType.KEYWORD)
         condition = self.parse_expression()
-        self.consume(TokenType.COLON)
+        #self.consume(TokenType.COLON)
         # Generate JavaScript code for 'if' structure using 'condition'
         self.js_code += self.code_generator.generate_js_code_for_if_structure(condition)
-        self.consume(TokenType.NEWLINE)
+        #self.consume(TokenType.NEWLINE)
 
         # Parse the 'if' block
         self.parse_block()
@@ -278,8 +275,7 @@ class Parser:
                     self.error("Invalid parameter")
         self.consume(TokenType.RPAREN)
         self.parse_block()
-
         # Gerar código JavaScript para a definição da função
-        function_declaration = self.code_generator.generate_js_code_for_function_declaration(function_name, parameters, self.js_code)
-        return function_declaration
+        return self.code_generator.generate_js_code_for_function_declaration(function_name, parameters, self.js_code)
+    
 
