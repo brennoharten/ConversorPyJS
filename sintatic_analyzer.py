@@ -9,6 +9,7 @@ class Parser:
         self.current_token = None
         self.indent_level = 0
         self.js_code = ""
+        self.next = False
 
     def parse(self):
         self.advance()
@@ -34,7 +35,7 @@ class Parser:
                 else:
                     self.error(f"Invalid keyword: {self.current_token.value}")
             elif self.current_token.type == TokenType.FUNCTION:
-                self.parse_function_definition()
+                self.js_code += self.parse_function_definition()
             else:
                 self.error(f"Unexpected token: {self.current_token.type}")
         return self.js_code
@@ -63,7 +64,7 @@ class Parser:
         self.indent_level += 1  # Aumentar o nível de indentação
         
         while self.current_token and self.current_token.type != TokenType.NEWLINE:
-            self.parse_statement()
+            self.parse()
         
         self.indent_level -= 1  # Reduzir o nível de indentação
 
@@ -71,13 +72,13 @@ class Parser:
         self.consume(TokenType.KEYWORD)
         expression = self.parse_expression()
         # Generate JavaScript code for print statement using 'expression'
-        self.js_code += self.code_generator.generate_js_code_for_print(expression)
+        return self.code_generator.generate_js_code_for_print(expression)
 
     def parse_return_statement(self):
         self.consume(TokenType.KEYWORD)
         expression = self.parse_expression()
         # Generate JavaScript code for return statement using 'expression'
-        self.js_code += self.code_generator.generate_js_code_for_return(expression)
+        return self.code_generator.generate_js_code_for_return(expression)
 
 
     def parse_assignment_statement(self):
@@ -86,14 +87,14 @@ class Parser:
         self.consume(TokenType.ASSIGNMENT)
         expression = self.parse_expression()
         # Gerar código de atribuição em JavaScript usando 'identifier' e 'expression'
-        self.js_code += self.code_generator.generate_js_code_for_assignment(identifier, expression)
+        return self.code_generator.generate_js_code_for_assignment(identifier, expression)
 
     def parse_if_statement(self):
         self.consume(TokenType.KEYWORD)
         condition = self.parse_expression()
         self.consume(TokenType.COLON)
         # Generate JavaScript code for 'if' structure using 'condition'
-        self.js_code = self.code_generator.generate_js_code_for_if_structure(condition)
+        self.js_code += self.code_generator.generate_js_code_for_if_structure(condition)
         self.consume(TokenType.NEWLINE)
 
         # Parse the 'if' block
@@ -117,7 +118,8 @@ class Parser:
         self.consume(TokenType.KEYWORD)
         condition = self.parse_expression()
         self.consume(TokenType.COLON)
-        # Gerar código de loop 'while' em JavaScript usando 'condition'
+        self.js_code += f"while ({condition}) "  # Gerar código JavaScript para o loop 'while'
+        self.parse_block()
 
     def parse_for_loop(self):
         self.consume(TokenType.KEYWORD)
@@ -126,60 +128,77 @@ class Parser:
         self.consume(TokenType.IN)
         iterable = self.parse_expression()
         self.consume(TokenType.COLON)
-        # Gerar código de loop 'for' em JavaScript usando 'identifier' e 'iterable'
+        self.js_code += f"for (let {identifier} of {iterable}) "  # Gerar código JavaScript para o loop 'for'
+        self.parse_block()
+
 
     def parse_expression(self):
         return self.parse_logical_expression()
 
     def parse_logical_expression(self):
         left = self.parse_equality_expression()
-        while self.current_token and self.current_token.type == TokenType.LOGICAL_OPERATOR:
-            operator = self.current_token.value
-            self.consume(TokenType.LOGICAL_OPERATOR)
-            right = self.parse_equality_expression()
-            # Gerar código JavaScript para a expressão lógica usando 'left', 'operator' e 'right'
-            # Atualizar 'left' com o resultado da expressão lógica para análise posterior
-            return self.code_generator.generate_js_code_for_expression(left, operator, right)
+        if self.current_token and self.current_token.type != TokenType.LOGICAL_OPERATOR or self.next == True:
+            return self.code_generator.generate_js_code_for_number(left)
+        else:
+            while self.current_token and self.current_token.type == TokenType.LOGICAL_OPERATOR:
+                operator = self.current_token.value
+                self.consume(TokenType.LOGICAL_OPERATOR)
+                right = self.parse_equality_expression()
+                # Gerar código JavaScript para a expressão lógica usando 'left', 'operator' e 'right'
+                # Atualizar 'left' com o resultado da expressão lógica para análise posterior
+                return self.code_generator.generate_js_code_for_expression(left, operator, right)
 
     def parse_equality_expression(self):
         left = self.parse_relational_expression()
-        while self.current_token and self.current_token.type == TokenType.EQUALITY:
-            operator = self.current_token.value
-            self.consume(TokenType.EQUALITY)
-            right = self.parse_relational_expression()
-            # Gerar código JavaScript para a expressão de igualdade usando 'left', 'operator' e 'right'
-            # Atualizar 'left' com o resultado da expressão de igualdade para análise posterior
-            return self.code_generator.generate_js_code_for_expression(left, operator, right)
+        if self.current_token and self.current_token.type != TokenType.EQUALITY or self.next == True:
+            return self.code_generator.generate_js_code_for_number(left)
+        else:
+            while self.current_token and self.current_token.type == TokenType.EQUALITY:
+                operator = self.current_token.value
+                self.consume(TokenType.EQUALITY)
+                right = self.parse_relational_expression()
+                # Gerar código JavaScript para a expressão de igualdade usando 'left', 'operator' e 'right'
+                # Atualizar 'left' com o resultado da expressão de igualdade para análise posterior
+                return self.code_generator.generate_js_code_for_expression(left, operator, right)
 
     def parse_relational_expression(self):
         left = self.parse_additive_expression()
-        while self.current_token and self.current_token.type == TokenType.RELATIONAL:
-            operator = self.current_token.value
-            self.consume(TokenType.RELATIONAL)
-            right = self.parse_additive_expression()
-            # Gerar código JavaScript para a expressão relacional usando 'left', 'operator' e 'right'
-            # Atualizar 'left' com o resultado da expressão relacional para análise posterior
-            return self.code_generator.generate_js_code_for_expression(left, operator, right)
+        if self.current_token and self.current_token.type != TokenType.RELATIONAL or self.next == True:
+            return self.code_generator.generate_js_code_for_number(left)
+        else:
+            while self.current_token and self.current_token.type == TokenType.RELATIONAL:
+                operator = self.current_token.value
+                self.consume(TokenType.RELATIONAL)
+                right = self.parse_additive_expression()
+                # Gerar código JavaScript para a expressão relacional usando 'left', 'operator' e 'right'
+                # Atualizar 'left' com o resultado da expressão relacional para análise posterior
+                return self.code_generator.generate_js_code_for_expression(left, operator, right)
 
     def parse_additive_expression(self):
         left = self.parse_multiplicative_expression()
-        while self.current_token and self.current_token.type == TokenType.OPERATOR:
-            operator = self.current_token.value
-            self.consume(TokenType.OPERATOR)
-            right = self.parse_multiplicative_expression()
-            # Gerar código JavaScript para a expressão aditiva usando 'left', 'operator' e 'right'
-            # Atualizar 'left' com o resultado da expressão aditiva para análise posterior
-            return self.code_generator.generate_js_code_for_expression(left, operator, right)
+        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True:
+            return self.code_generator.generate_js_code_for_number(left)
+        else:
+            while self.current_token and self.current_token.type == TokenType.OPERATOR:
+                operator = self.current_token.value
+                self.consume(TokenType.OPERATOR)
+                right = self.parse_multiplicative_expression()
+                # Gerar código JavaScript para a expressão aditiva usando 'left', 'operator' e 'right'
+                # Atualizar 'left' com o resultado da expressão aditiva para análise posterior
+                return self.code_generator.generate_js_code_for_expression(left, operator, right)
 
     def parse_multiplicative_expression(self):
         left = self.parse_primary_expression()
-        while self.current_token and self.current_token.type == TokenType.OPERATOR:
-            operator = self.current_token.value
-            self.consume(TokenType.OPERATOR)
-            right = self.parse_primary_expression()
-            # Gerar código JavaScript para a expressão multiplicativa usando 'left', 'operator' e 'right'
-            # Atualizar 'left' com o resultado da expressão multiplicativa para análise posterior
-            return self.code_generator.generate_js_code_for_expression(left, operator, right)
+        if self.current_token and self.current_token.type != TokenType.OPERATOR or self.next == True:
+            return self.code_generator.generate_js_code_for_number(left)
+        else:
+            while self.current_token and self.current_token.type == TokenType.OPERATOR:
+                operator = self.current_token.value
+                self.consume(TokenType.OPERATOR)
+                right = self.parse_primary_expression()
+                # Gerar código JavaScript para a expressão multiplicativa usando 'left', 'operator' e 'right'
+                # Atualizar 'left' com o resultado da expressão multiplicativa para análise posterior
+                return self.code_generator.generate_js_code_for_expression(left, operator, right)
 
     def parse_primary_expression(self):
         if self.current_token.type == TokenType.NUMBER:
@@ -207,7 +226,9 @@ class Parser:
             expression = self.parse_expression()
             self.consume(TokenType.RPAREN)
             # Gerar código JavaScript para uma expressão entre parênteses
+            self.next = True
             return self.code_generator.generate_js_code_for_parenthesized_expression(expression)
+
         else:
             raise SyntaxError(f"Invalid expression: {self.current_token.value}")
         
@@ -215,7 +236,7 @@ class Parser:
         self.consume(TokenType.FUNCTION)
         function_name = self.current_token.value
         self.consume(TokenType.IDENTIFIER)
-        self.consume(TokenType.OPEN_PAREN)
+        self.consume(TokenType.LPAREN)
 
         # Parse os parâmetros da função
         parameters = []
@@ -229,15 +250,10 @@ class Parser:
                     self.consume(TokenType.IDENTIFIER)
                 else:
                     self.error("Invalid parameter")
-        self.consume(TokenType.CLOSE_PAREN)
-        self.consume(TokenType.COLON)
-
-        # Parse o corpo da função
-        self.indent_level += 1
+        self.consume(TokenType.RPAREN)
         self.parse_block()
-        self.indent_level -= 1
 
         # Gerar código JavaScript para a definição da função
         function_declaration = self.code_generator.generate_js_code_for_function_declaration(function_name, parameters, self.js_code)
-        self.js_code += function_declaration
+        return function_declaration
 

@@ -4,7 +4,7 @@ class CodeGenerator:
         self.indentation = '    '  # 4 spaces for each level of indentation
 
     def generate_js_code_for_print(self, expression):
-        return f'console.log({expression});'
+        return f'console.log{expression};'
 
     def generate_js_code_for_return(self, expression):
         return f'return {expression};'
@@ -45,4 +45,10 @@ class CodeGenerator:
         function_declaration += block_code
         function_declaration += "}\n\n"
         return function_declaration
+    
+    def generate_js_code_for_while_loop(self, condition):
+        return f'while ({condition}) {{'
+
+    def generate_js_code_for_for_loop(self, identifier, iterable):
+        return f'for (let {identifier} of {iterable}) {{'
 

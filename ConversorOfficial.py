@@ -2,6 +2,10 @@
 from tokenizer import Tokenizer
 from sintatic_analyzer import Parser
 
+def gerar_arquivo_js(codigo_js, nome_arquivo):
+    with open(nome_arquivo, 'w') as arquivo:
+        arquivo.write(codigo_js)
+
 def convert(input_code):
     # etapa 1: tokenização
     tokenizer = Tokenizer(input_code)
@@ -12,6 +16,10 @@ def convert(input_code):
     return parser.parse()
 
 # exemplo de uso
-python_code = "x = 2 + 3 * , 4 \n print(x)"
+python_code = "x = 2 * 3 + 4 \n print(x)"
 js_code = convert(python_code)
+
 print(js_code)
+
+gerar_arquivo_js(js_code, 'arquivo.js')
+
